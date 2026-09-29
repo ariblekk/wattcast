@@ -292,8 +292,11 @@ class _SummaryStrip extends StatelessWidget {
             child: _cell(
               context,
               label: 'SISA TOKEN',
-              value: hasData ? Formatters.kwh(provider.remainingKwh) : '—',
+              value: hasData
+                  ? Formatters.kwh(provider.estimatedRemainingKwh)
+                  : '—',
               unit: 'kWh',
+              estimate: hasData && provider.isRemainingEstimated,
             ),
           ),
           _verticalDivider(context),
@@ -335,6 +338,7 @@ class _SummaryStrip extends StatelessWidget {
     required String unit,
     Color? valueColor,
     bool muted = false,
+    bool estimate = false,
   }) {
     final Color fallback = muted
         ? ThemeColors.textSecondary(context)
@@ -359,6 +363,16 @@ class _SummaryStrip extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: <Widget>[
+              if (estimate) ...<Widget>[
+                Text(
+                  '≈',
+                  style: AppTypography.caption.copyWith(
+                    fontSize: 12,
+                    color: ThemeColors.textSecondary(context),
+                  ),
+                ),
+                const SizedBox(width: 2),
+              ],
               Text(
                 value,
                 maxLines: 1,

@@ -125,6 +125,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
               ],
             ),
+            actions: <Widget>[
+              IconButton(
+                onPressed: () => AddLogSheet.show(context),
+                icon: const Icon(Icons.add),
+                color: AppColors.primary,
+                tooltip: 'Tambah pencatatan',
+              ),
+              const SizedBox(width: 4),
+            ],
           ),
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,7 +228,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ? _buildEmptyState(context)
                     : ListView(
                         padding: const EdgeInsets.only(bottom: 32),
-                        children: _buildSections(context, filtered),
+                        children: _buildSections(context, filtered, provider.logs),
                       ),
               ),
             ],
@@ -256,6 +265,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   List<Widget> _buildSections(
     BuildContext context,
     List<WattLog> logs,
+    List<WattLog> allLogs,
   ) {
     final Map<String, List<WattLog>> byDay = <String, List<WattLog>>{};
     for (final WattLog log in logs) {
@@ -289,6 +299,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       sections.add(
         _HistoryGroup(
           logs: dayLogs,
+          allLogs: allLogs,
           onEdit: (WattLog value) =>
               AddLogSheet.show(context, existingLog: value),
           onDelete: (WattLog value) => _confirmDelete(context, value),
@@ -390,13 +401,29 @@ class _FilterChip<T> extends StatelessWidget {
 class _HistoryGroup extends StatelessWidget {
   const _HistoryGroup({
     required this.logs,
+    required this.allLogs,
     required this.onEdit,
     required this.onDelete,
   });
 
   final List<WattLog> logs;
+
+  /// Seluruh log (urutan terbaru ke terlama, semua meteran), dipakai untuk
+  /// mencari sisa pencatatan sebelumnya walau hari/filter berbeda.
+  final List<WattLog> allLogs;
   final void Function(WattLog log) onEdit;
   final void Function(WattLog log) onDelete;
+
+  double? _previousOf(WattLog log) {
+    for (int i = 0; i < allLogs.length; i++) {
+      if (identical(allLogs[i], log) &&
+          i + 1 < allLogs.length &&
+          allLogs[i + 1].meterId == log.meterId) {
+        return allLogs[i + 1].remainingKwh;
+      }
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -415,6 +442,7 @@ class _HistoryGroup extends StatelessWidget {
               if (i > 0) const Divider(height: 1),
               LogItemTile(
                 log: logs[i],
+                previousRemaining: _previousOf(logs[i]),
                 onTap: () => onEdit(logs[i]),
                 onDelete: () => onDelete(logs[i]),
               ),

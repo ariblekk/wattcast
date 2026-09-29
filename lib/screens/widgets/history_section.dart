@@ -67,6 +67,9 @@ class HistoryList extends StatelessWidget {
               if (i > 0) const Divider(height: 1),
               LogItemTile(
                 log: logs[i],
+                previousRemaining: i + 1 < logs.length
+                    ? logs[i + 1].remainingKwh
+                    : null,
                 onTap: () => onEdit(logs[i]),
                 onDelete: () => onDelete(logs[i]),
               ),

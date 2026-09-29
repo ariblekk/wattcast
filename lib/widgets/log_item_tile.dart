@@ -15,12 +15,17 @@ class LogItemTile extends StatelessWidget {
     this.onTap,
     this.onDelete,
     this.showDelete = true,
+    this.previousRemaining,
   });
 
   final WattLog log;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
   final bool showDelete;
+
+  /// Sisa kWh pencatatan sebelumnya (meter yang sama), untuk menampilkan
+  /// transisi `sebelum → sesudah` pada log kalibrasi.
+  final double? previousRemaining;
 
   Color _accent(BuildContext context) {
     switch (log.logType) {
@@ -96,6 +101,36 @@ class LogItemTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
+                if (previousRemaining != null &&
+                    log.logType != LogType.initial) ...<Widget>[
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: <Widget>[
+                        Text(
+                          Formatters.kwh(previousRemaining!),
+                          style: AppTypography.captionBold.copyWith(
+                            fontSize: 11.5,
+                            color: ThemeColors.textSecondary(context),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 3),
+                          child: Text(
+                            '→',
+                            style: AppTypography.caption.copyWith(
+                              fontSize: 10,
+                              color: ThemeColors.textSecondary(context),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 Text(
                   Formatters.kwh(log.remainingKwh),
                   style: AppTypography.statValue.copyWith(
